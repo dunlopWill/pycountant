@@ -4,10 +4,17 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pydantic>=2.11.7",
+]
 
 [dependency-groups]
-dev = ["mypy>=1.17.1", "pre-commit>=4.3.0", "ruff>=0.12.10"]
+dev = [
+    "mypy>=1.17.1",
+ "pre-commit>=4.3.0",
+ "pytest>=8.4.1",
+ "ruff>=0.12.10",
+]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
