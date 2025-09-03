@@ -10,5 +10,6 @@ from pydantic import (
 )
 
 Number = Annotated[
-    Decimal, BeforeValidator(lambda v: Decimal(v).quantize(Decimal("1.00"))),
+    Decimal,
+    BeforeValidator(lambda v: Decimal(v).quantize(Decimal("1.00"))),
 ]

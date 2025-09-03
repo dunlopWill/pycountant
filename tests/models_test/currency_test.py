@@ -89,7 +89,9 @@ def test_currency_convert() -> None:
     # arrange
     item = Currency(value="87309.67", code="CZK")
     # act
-    converted = item.convert(to="THB", on=date(2025,9,2), using="European Central Bank")
+    converted = item.convert(
+        to="THB", on=date(2025, 9, 2), using="European Central Bank",
+    )
     # assert
     assert converted.code == "THB"
     assert converted.value == Decimal("134446.55")

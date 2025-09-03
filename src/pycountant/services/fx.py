@@ -70,7 +70,11 @@ def get_rate_via_ecb(value: Decimal, of: ISO4217, to: ISO4217, on: PastDate) -> 
 
 @cache
 def convert(
-    value: Decimal, of: ISO4217, to: ISO4217, on: PastDate, using: ProviderStr,
+    value: Decimal,
+    of: ISO4217,
+    to: ISO4217,
+    on: PastDate,
+    using: ProviderStr,
 ) -> Decimal:
     strategies: dict[
         ProviderStr,
