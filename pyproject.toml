@@ -1,11 +1,14 @@
 [project]
 name = "pycountant"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python package for accountants."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "httpx>=0.28.1",
+    "pycountry>=24.6.1",
     "pydantic>=2.11.7",
+    "pydantic-extra-types>=2.10.5",
 ]
 
 [dependency-groups]
@@ -94,3 +97,6 @@ docstring-code-format = true
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
+
+[tool.pytest.ini_options]
+pythonpath = "src"
