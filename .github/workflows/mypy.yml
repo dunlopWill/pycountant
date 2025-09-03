@@ -37,6 +37,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install uv
           uv tool install mypy
+          uv sync
           echo $(mypy --version)
 
       - name: Run MyPy
