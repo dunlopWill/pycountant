@@ -1,6 +1,6 @@
 # This is a basic workflow to run R
 
-name: Ruff
+name: MyPy
 
 # Controls when the workflow will run
 on:
