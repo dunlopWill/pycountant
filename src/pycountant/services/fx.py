@@ -23,7 +23,7 @@ from pydantic_extra_types.currency_code import (
     ISO4217,
 )
 
-from extra_types import (
+from ..extra_types import (
     ProviderStr,
 )
 

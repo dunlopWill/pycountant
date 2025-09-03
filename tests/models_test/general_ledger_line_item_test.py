@@ -3,7 +3,7 @@ from decimal import (
 )
 import pytest
 
-from models import (
+from pycountant.models import (
     GeneralLedgerLineItem,
 )
 

@@ -13,7 +13,7 @@ from pydantic_extra_types.currency_code import (
     ISO4217,
 )
 
-from services import (
+from pycountant.services import (
     convert,
 )
 
