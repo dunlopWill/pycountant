@@ -6,3 +6,8 @@ Python package for accountants.
 ```bash
 uv add pycountant
 ```
+
+## Reference
+
+::: my_library.my_module.my_class
+::: pycountant.models.currency

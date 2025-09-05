@@ -1,0 +1,25 @@
+site_name: PyCountant
+
+nav:
+# rest of the navigation...
+# defer to gen-files + literate-nav
+- Code Reference: reference/  # (1)!
+# rest of the navigation...
+- Home: index.md
+- About: about.md
+
+theme:
+  name: "material"
+
+plugins:
+- search
+- gen-files:
+    scripts:
+    - scripts/gen_ref_pages.py
+- literate-nav:
+    nav_file: SUMMARY.md
+- section-index
+- mkdocstrings:
+    handlers:
+      python:
+        paths: ["src"]
