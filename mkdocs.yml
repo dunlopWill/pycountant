@@ -6,10 +6,12 @@ nav:
 - Code Reference: reference/  # (1)!
 # rest of the navigation...
 - Home: index.md
-- About: about.md
 
 theme:
   name: "material"
+  palette:
+    primary: green
+    accent: green
 
 plugins:
 - search
