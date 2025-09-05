@@ -154,3 +154,9 @@ class Currency(BaseModel):
             value = cls.decountify(value=value)
             data["value"] = value
         return data
+
+
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod()
