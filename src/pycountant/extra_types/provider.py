@@ -1,5 +1,10 @@
+"""
+Custom types for providers.
+"""
+
 from typing import (
     Literal,
 )
 
-ProviderStr = Literal["European Central Bank"]
+# Literal foreign exchange providers.
+FxProviderStr = Literal["European Central Bank"]

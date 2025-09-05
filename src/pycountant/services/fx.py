@@ -1,6 +1,9 @@
+"""
+Foreign exchange services.
+"""
+
 from datetime import (
     date,
-    timedelta,
 )
 from decimal import (
     Decimal,
@@ -24,13 +27,30 @@ from pydantic_extra_types.currency_code import (
 )
 
 from ..extra_types import (
-    ProviderStr,
+    FxProviderStr,
 )
 
 
-def get_rate_via_ecb(value: Decimal, of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
-    url = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
-    content = str(httpx.get(url).content)
+def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
+    """
+    Get FX rate via European Central Bank.
+
+    Args:
+        of (ISO4217): Currency code to convert from.
+        to (ISO4217): Currency code to convert to.
+        on (PastDate): Date to get the rate for.
+
+    Raises:
+        ValueError: When no rate is found for the given currencies on the given date.
+
+    Returns:
+        Decimal: The FX rate.
+    """
+    content = str(
+        httpx.get(
+            "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml",
+        ).content,
+    )
     start = content.find("<Cube>")
     end = content.find("</gesmes:Envelope>")
     tree = ElementTree.fromstring(content[start:end])
@@ -55,17 +75,16 @@ def get_rate_via_ecb(value: Decimal, of: ISO4217, to: ISO4217, on: PastDate) -> 
                 if _to_rate:
                     to_rate = Decimal(_to_rate)
                     continue
-    using: ProviderStr = "European Central Bank"
     if of_rate is None:
         raise ValueError(
-            f"No rate found for '{of}' on {on.isoformat()} using '{using}'",
+            f"No rate found for '{of}' on {on.isoformat()} using European Central Bank",
         )
     if to_rate is None:
         raise ValueError(
-            f"No rate found for '{to}' on {on.isoformat()} using '{using}'",
+            f"No rate found for '{to}' on {on.isoformat()} using European Central Bank",
         )
-    EUR_TO_EUR_RATE = Decimal("1.0")
-    return (EUR_TO_EUR_RATE / of_rate) / (EUR_TO_EUR_RATE / to_rate)
+    eur_to_eur_rate = Decimal("1.0")
+    return (eur_to_eur_rate / of_rate) / (eur_to_eur_rate / to_rate)
 
 
 @cache
@@ -74,31 +93,34 @@ def convert(
     of: ISO4217,
     to: ISO4217,
     on: PastDate,
-    using: ProviderStr,
+    using: FxProviderStr,
 ) -> Decimal:
+    """
+    Convert a value from one currency to another.
+
+    Args:
+        value (Decimal): The value to convert.
+        of (ISO4217): Currency code to convert from.
+        to (ISO4217): Currency code to convert to.
+        on (PastDate): Date to get the rate for.
+        using (FxProviderStr): The FX provider to use.
+
+    Raises:
+        NotImplementedError: When the given FX provider is not supported.
+
+    Returns:
+        Decimal: The converted value.
+    """
     strategies: dict[
-        ProviderStr,
-        Callable[[Decimal, ISO4217, ISO4217, date], Decimal],
+        FxProviderStr,
+        Callable[[ISO4217, ISO4217, date], Decimal],
     ] = {
         "European Central Bank": get_rate_via_ecb,
-        # TODO HMRC https://developer.service.hmrc.gov.uk/api-documentation/docs/api/xml/Exchange%20rates%20from%20HMRC
     }
     strategy = strategies.get(using)
     if strategy is None:
         raise NotImplementedError(
             f"Currently only '{','.join(strategies)}' is supported, not '{using}'",
         )
-    rate = strategy(value, of, to, on)
+    rate = strategy(of, to, on)
     return value * rate
-
-
-if __name__ == "__main__":
-    print(
-        convert(
-            value=Decimal("100"),
-            of="USD",
-            to="GBP",
-            on=date.today() - timedelta(days=1),
-            using="European Central Bank",
-        ),
-    )
