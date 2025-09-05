@@ -124,3 +124,9 @@ def convert(
         )
     rate = strategy(of, to, on)
     return value * rate
+
+
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod()
