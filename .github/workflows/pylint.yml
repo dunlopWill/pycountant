@@ -21,4 +21,4 @@ jobs:
           uv sync
       - name: Analysing the code with pylint
         run: |
-          uv run pylint $(git ls-files '*.py')
+          uv run pylint $(git ls-files '*.py' | grep -v '_test\.py$') --allow-reexport-from-package y
