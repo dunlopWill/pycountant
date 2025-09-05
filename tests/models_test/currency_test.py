@@ -15,10 +15,26 @@ from pycountant.models import (
 @pytest.mark.parametrize(
     "context, expected_value, expected_code",
     [
-        ({"value": "$100.12"}, Decimal("100.12").quantize(Decimal("1.00")), "USD"),
-        ({"value": "-$100.12"}, Decimal("-100.12").quantize(Decimal("1.00")), "USD"),
-        ({"value": "$-100.12"}, Decimal("-100.12").quantize(Decimal("1.00")), "USD"),
-        ({"value": "100.12$"}, Decimal("100.12").quantize(Decimal("1.00")), "USD"),
+        (
+            {"value": "$100.12"},
+            Decimal("100.12").quantize(Decimal("1.00")),
+            "USD",
+        ),
+        (
+            {"value": "-$100.12"},
+            Decimal("-100.12").quantize(Decimal("1.00")),
+            "USD",
+        ),
+        (
+            {"value": "$-100.12"},
+            Decimal("-100.12").quantize(Decimal("1.00")),
+            "USD",
+        ),
+        (
+            {"value": "100.12$"},
+            Decimal("100.12").quantize(Decimal("1.00")),
+            "USD",
+        ),
         (
             {"value": "   £   100.12   "},
             Decimal("100.12").quantize(Decimal("1.00")),
@@ -74,6 +90,16 @@ from pycountant.models import (
             Decimal("10200000").quantize(Decimal("1.00")),
             "USD",
         ),
+        (
+            {"value": "10.2m", "code": "$"},
+            Decimal("10200000").quantize(Decimal("1.00")),
+            "USD",
+        ),
+        (
+            {"value": "$10.2m", "code": "$"},
+            Decimal("10200000").quantize(Decimal("1.00")),
+            "USD",
+        ),
     ],
 )
 def test_currency(context, expected_value, expected_code) -> None:
@@ -87,9 +113,13 @@ def test_currency(context, expected_value, expected_code) -> None:
 
 def test_currency_convert() -> None:
     # arrange
-    item = Currency(value="87309.67", code="CZK")
+    item = Currency(value="87309.67", code="CZK")  # type: ignore[arg-type]
     # act
-    converted = item.convert(to="THB", on=date(2025,9,2), using="European Central Bank")
+    converted = item.convert(
+        to="THB",  # type: ignore[arg-type]
+        on=date(2025, 9, 2),
+        using="European Central Bank",  # type: ignore[arg-type]
+    )
     # assert
     assert converted.code == "THB"
     assert converted.value == Decimal("134446.55")

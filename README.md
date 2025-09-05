@@ -4,5 +4,5 @@ Python package for accountants.
 ## Installation
 
 ```bash
-uv install pycountant
+uv add pycountant
 ```
