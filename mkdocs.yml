@@ -2,16 +2,42 @@ site_name: PyCountant
 
 nav:
 # rest of the navigation...
+- Get Started: index.md
 # defer to gen-files + literate-nav
-- Code Reference: reference/  # (1)!
+- Reference: reference/  # (1)!
 # rest of the navigation...
-- Home: index.md
+- Sponsor: sponsor.md
 
 theme:
+  icon:
+    logo: material/library
   name: "material"
   palette:
-    primary: green
-    accent: green
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+      primary: green
+      accent: green
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: green
+      accent: green
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+      primary: green
+      accent: green
 
 plugins:
 - search
@@ -25,3 +51,10 @@ plugins:
     handlers:
       python:
         paths: ["src"]
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
