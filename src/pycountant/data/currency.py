@@ -2,6 +2,7 @@
 Data related to currency including common
 abbreviations and maps of symbols to codes.
 """
+
 from pydantic_extra_types.currency_code import (
     ISO4217,
 )
