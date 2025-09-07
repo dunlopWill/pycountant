@@ -4,6 +4,7 @@ Foreign exchange services.
 
 from datetime import (
     date,
+    datetime,
 )
 from decimal import (
     Decimal,
@@ -31,6 +32,7 @@ from ..extra_types import (
 )
 
 
+@cache
 def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     """
     Get FX rate via European Central Bank.
@@ -87,29 +89,21 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     return (eur_to_eur_rate / of_rate) / (eur_to_eur_rate / to_rate)
 
 
-@cache
-def convert(
-    value: Decimal,
-    of: ISO4217,
-    to: ISO4217,
-    on: PastDate,
+def get_conversion_strategy(
+    *,
     using: FxProviderStr,
-) -> Decimal:
+) -> Callable[[ISO4217, ISO4217, date], Decimal]:
     """
-    Convert a value from one currency to another.
+    Get the conversion strategy for a particular provider.
 
     Args:
-        value (Decimal): The value to convert.
-        of (ISO4217): Currency code to convert from.
-        to (ISO4217): Currency code to convert to.
-        on (PastDate): Date to get the rate for.
-        using (FxProviderStr): The FX provider to use.
+        using (FxProviderStr): The provider.
 
     Raises:
-        NotImplementedError: When the given FX provider is not supported.
+        NotImplementedError: Error raised if no strategy exists for that provider.
 
     Returns:
-        Decimal: The converted value.
+        Callable[[ISO4217, ISO4217, date], Decimal]: A strategy to obtain the rate for conversion with.
     """
     strategies: dict[
         FxProviderStr,
@@ -122,7 +116,94 @@ def convert(
         raise NotImplementedError(
             f"Currently only '{','.join(strategies)}' is supported, not '{using}'",
         )
-    rate = strategy(of, to, on)
+    return strategy
+
+
+@cache
+def get_rate(
+    *,
+    of: ISO4217,
+    to: ISO4217,
+    on: PastDate,
+    using: FxProviderStr = "European Central Bank",
+):
+    """
+    Get the rate to convert one currency to another on a past date.
+
+    Args:
+        of (ISO4217): Currency code to convert from.
+        to (ISO4217): Currency code to convert to.
+        on (PastDate): Date to get the rate for.
+        using (FxProviderStr): The FX provider to use. Defaults to "European Central Bank"
+
+    Raises:
+        NotImplementedError: When the given FX provider is not supported.
+
+    Returns:
+        Decimal: The rate
+
+    !!! warning
+
+        If the *on* PastDate does not fall on a weekday (Monday to Friday),
+        then it will not be possible to obtain a rate for conversion.
+
+    !!! failure
+
+        If there is no internet connection, it will not be possible to make
+        the relevant API call to obtain the rate for conversion.
+
+    """
+    strategy = get_conversion_strategy(using=using)
+    if isinstance(on, datetime):
+        on = on.date()  # Don't need time info
+    return strategy(of, to, on)
+
+
+@cache
+def convert(
+    *,
+    value: Decimal,
+    of: ISO4217,
+    to: ISO4217,
+    on: PastDate,
+    using: FxProviderStr = "European Central Bank",
+) -> Decimal:
+    """
+    Convert a value from one currency to another.
+
+    Args:
+        value (Decimal): The value to convert.
+        of (ISO4217): Currency code to convert from.
+        to (ISO4217): Currency code to convert to.
+        on (PastDate): Date to get the rate for.
+        using (FxProviderStr): The FX provider to use. Defaults to "European Central Bank"
+
+    Raises:
+        NotImplementedError: When the given FX provider is not supported.
+
+    Returns:
+        Decimal: The converted value.
+
+    Examples:
+
+        >>> from pycountant.services.fx import convert
+        >>> print(
+        ...     convert(value=Decimal("12340"), of="USD", to="EUR", on=date(2023, 1, 5))
+        ... )
+        11640.41128195453259126497500
+
+    !!! warning
+
+        If the *on* PastDate does not fall on a weekday (Monday to Friday),
+        then it will not be possible to obtain a rate for conversion.
+
+    !!! failure
+
+        If there is no internet connection, it will not be possible to make
+        the relevant API call to obtain the rate for conversion.
+
+    """
+    rate = get_rate(of=of, to=to, on=on, using=using)
     return value * rate
 
 

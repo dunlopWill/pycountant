@@ -1,5 +1,6 @@
 from datetime import (
     date,
+    datetime,
 )
 from decimal import (
     Decimal,
@@ -50,6 +51,14 @@ from pycountant.services import (
             "CZK",
             "THB",
             date(2025, 9, 2),
+            "European Central Bank",
+            Decimal("134446.55"),
+        ),
+        (
+            Decimal("87309.67"),
+            "CZK",
+            "THB",
+            datetime(2025, 9, 2),
             "European Central Bank",
             Decimal("134446.55"),
         ),

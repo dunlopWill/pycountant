@@ -1,7 +1,19 @@
-# Welcome to PyCountant
+# PyCountant
 
-For full documentation visit [pycountant.com](https:/pycountant.com).
+## Welcome to PyCountant
 
-# Sponsor
+PyCountant brings the domain knowledge of accounting to Python, enabling professionals to focus on solving problems fast.
 
-<iframe src="https://github.com/sponsors/dunlopWill/card" title="Sponsor PyCountant" height="225" width="600" style="border: 0;"></iframe>
+## Installation
+
+=== "uv"
+
+    ```bash
+    uv add pycountant
+    ```
+
+=== "pip"
+
+    ```bash
+    pip install pycountant
+    ```
