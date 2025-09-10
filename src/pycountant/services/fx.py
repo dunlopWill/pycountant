@@ -33,6 +33,12 @@ from ..extra_types import (
 
 
 @cache
+def get_rate_from_base(of_rate: Decimal, to_rate: Decimal) -> Decimal:
+    base_rate = Decimal("1.0")
+    return (base_rate / of_rate) / (base_rate / to_rate)
+
+
+@cache
 def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     """
     Get FX rate via European Central Bank.
@@ -85,8 +91,26 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
         raise ValueError(
             f"No rate found for '{to}' on {on.isoformat()} using European Central Bank",
         )
-    eur_to_eur_rate = Decimal("1.0")
-    return (eur_to_eur_rate / of_rate) / (eur_to_eur_rate / to_rate)
+    return get_rate_from_base(of_rate=of_rate, to_rate=to_rate)
+
+
+@cache
+def get_rate_via_hmrc(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
+    # https://api.trade-tariff.service.gov.uk/reference.html#get-exchange-rates-year-month
+    url = f"https://www.trade-tariff.service.gov.uk/uk/api/exchange_rates/{on.year}-{on.month}?filter[type]=monthly"
+    response = httpx.get(url)
+    print(response)
+    to_rate = [
+        item["attributes"]["rate"]
+        for item in response["included"]
+        if item["attributes"]["currency_code"] == to
+    ][0]
+    of_rate = [
+        item["attributes"]["rate"]
+        for item in response["included"]
+        if item["attributes"]["currency_code"] == of
+    ][0]
+    return get_rate_from_base(of_rate=of_rate, to_rate=to_rate)
 
 
 def get_conversion_strategy(
@@ -110,6 +134,7 @@ def get_conversion_strategy(
         Callable[[ISO4217, ISO4217, date], Decimal],
     ] = {
         "European Central Bank": get_rate_via_ecb,
+        "HMRC": get_rate_via_hmrc,
     }
     strategy = strategies.get(using)
     if strategy is None:

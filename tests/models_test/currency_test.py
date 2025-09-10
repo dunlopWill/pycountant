@@ -111,15 +111,26 @@ def test_currency(context, expected_value, expected_code) -> None:
     assert item.code == expected_code
 
 
-def test_currency_convert() -> None:
+@pytest.mark.parametrize(
+    "value, code, to, expected",
+    [
+        (
+            "87309.67",
+            "CZK",
+            "THB",
+            Decimal("134446.55"),
+        ),
+    ],
+)
+def test_currency_convert(value, code, to, expected) -> None:
     # arrange
-    item = Currency(value="87309.67", code="CZK")  # type: ignore[arg-type]
+    item = Currency(value=value, code=code)  # type: ignore[arg-type]
     # act
-    converted = item.convert(
-        to="THB",  # type: ignore[arg-type]
+    item.convert(
+        to=to,  # type: ignore[arg-type]
         on=date(2025, 9, 2),
         using="European Central Bank",  # type: ignore[arg-type]
     )
     # assert
-    assert converted.code == "THB"
-    assert converted.value == Decimal("134446.55")
+    assert item.code == to
+    assert item.value == expected

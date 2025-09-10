@@ -5,15 +5,15 @@ from datetime import (
 from decimal import (
     Decimal,
 )
-from typing import (
-    Literal,
-)
 
 import pytest
 from pydantic_extra_types.currency_code import (
     ISO4217,
 )
 
+from pycountant.extra_types import (
+    FxProviderStr,
+)
 from pycountant.services import (
     convert,
 )
@@ -62,6 +62,14 @@ from pycountant.services import (
             "European Central Bank",
             Decimal("134446.55"),
         ),
+        (
+            Decimal("100.00"),
+            "GBP",
+            "USD",
+            datetime(2024, 10, 31),
+            "HMRC",
+            Decimal("132.11"),  # 1.3211 * 100
+        ),
     ],
 )
 def test_convert(
@@ -69,7 +77,7 @@ def test_convert(
     of: ISO4217,
     to: ISO4217,
     on: date,
-    using: Literal["European Central Bank"],
+    using: FxProviderStr,
     expected: Decimal,
 ) -> None:
     # arrange
