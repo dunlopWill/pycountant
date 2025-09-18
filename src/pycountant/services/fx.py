@@ -98,19 +98,35 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
 def get_rate_via_hmrc(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     # https://api.trade-tariff.service.gov.uk/reference.html#get-exchange-rates-year-month
     url = f"https://www.trade-tariff.service.gov.uk/uk/api/exchange_rates/{on.year}-{on.month}?filter[type]=monthly"
-    response = httpx.get(url)
-    print(response)
-    to_rate = [
-        item["attributes"]["rate"]
-        for item in response["included"]
-        if item["attributes"]["currency_code"] == to
-    ][0]
-    of_rate = [
-        item["attributes"]["rate"]
-        for item in response["included"]
-        if item["attributes"]["currency_code"] == of
-    ][0]
-    return get_rate_from_base(of_rate=of_rate, to_rate=to_rate)
+    response = httpx.get(url=url)
+    content = response.json()
+    of_rate = None if of != "GBP" else Decimal("1.0")
+    to_rate = None if to != "GBP" else Decimal("1.0")
+    if not to_rate:
+        to_rate = [
+            item.get("attributes").get("rate")
+            for item in content.get("included")
+            if item.get("attributes").get("currency_code") == to
+        ]
+        if to_rate:
+            to_rate = to_rate[0]
+    if not of_rate:
+        of_rate = [
+            item.get("attributes").get("rate")
+            for item in content.get("included")
+            if item.get("attributes").get("currency_code") == of
+        ]
+        if of_rate:
+            of_rate = of_rate[0]
+    if of_rate is None:
+        raise ValueError(
+            f"No rate found for '{of}' on {on.isoformat()} using HMRC",
+        )
+    if to_rate is None:
+        raise ValueError(
+            f"No rate found for '{to}' on {on.isoformat()} using HMRC",
+        )
+    return get_rate_from_base(of_rate=Decimal(of_rate), to_rate=Decimal(to_rate))
 
 
 def get_conversion_strategy(
