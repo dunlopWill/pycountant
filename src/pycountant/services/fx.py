@@ -34,6 +34,17 @@ from ..extra_types import (
 
 @cache
 def get_rate_from_base(of_rate: Decimal, to_rate: Decimal) -> Decimal:
+    """
+    Gets the rate when it is known that the of and to rate are
+    relative to a single currency in the base rate.
+
+    Args:
+        of_rate (Decimal): The of rate.
+        to_rate (Decimal): The to rate.
+
+    Returns:
+        Decimal: The rate to use for conversion.
+    """
     base_rate = Decimal("1.0")
     return (base_rate / of_rate) / (base_rate / to_rate)
 
@@ -96,28 +107,51 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
 
 @cache
 def get_rate_via_hmrc(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
+    """
+    Get FX rate via HMRC.
+
+    !!! note
+
+    The rates obtained are the rate for that month and are not specific to the
+    particular day.
+
+    Args:
+        of (ISO4217): Currency code to convert from.
+        to (ISO4217): Currency code to convert to.
+        on (PastDate): Date to get the rate for.
+
+    Raises:
+        ValueError: When no rate is found for the given currencies on the given date.
+
+    Returns:
+        Decimal: The FX rate.
+    """
     # https://api.trade-tariff.service.gov.uk/reference.html#get-exchange-rates-year-month
-    url = f"https://www.trade-tariff.service.gov.uk/uk/api/exchange_rates/{on.year}-{on.month}?filter[type]=monthly"
+    url = (
+        f"https://www.trade-tariff.service.gov.uk/"
+        f"uk/api/exchange_rates/{on.year}-{on.month}"
+        f"?filter[type]=monthly"
+    )
     response = httpx.get(url=url)
     content = response.json()
     of_rate = None if of != "GBP" else Decimal("1.0")
     to_rate = None if to != "GBP" else Decimal("1.0")
     if not to_rate:
-        to_rate = [
+        to_rate_items = [
             item.get("attributes").get("rate")
             for item in content.get("included")
             if item.get("attributes").get("currency_code") == to
         ]
-        if to_rate:
-            to_rate = to_rate[0]
+        if to_rate_items:
+            to_rate = to_rate_items[0]
     if not of_rate:
-        of_rate = [
+        of_rate_items = [
             item.get("attributes").get("rate")
             for item in content.get("included")
             if item.get("attributes").get("currency_code") == of
         ]
-        if of_rate:
-            of_rate = of_rate[0]
+        if of_rate_items:
+            of_rate = of_rate_items[0]
     if of_rate is None:
         raise ValueError(
             f"No rate found for '{of}' on {on.isoformat()} using HMRC",
@@ -143,7 +177,8 @@ def get_conversion_strategy(
         NotImplementedError: Error raised if no strategy exists for that provider.
 
     Returns:
-        Callable[[ISO4217, ISO4217, date], Decimal]: A strategy to obtain the rate for conversion with.
+        Callable[[ISO4217, ISO4217, date], Decimal]: A strategy to obtain the
+                                                     rate for conversion with.
     """
     strategies: dict[
         FxProviderStr,
