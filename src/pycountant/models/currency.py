@@ -89,7 +89,13 @@ class Currency(BaseModel):
         Returns:
             Currency: The converted Currency.
         """
-        self.value = convert(value=self.value, of=self.code, to=to, on=on, using=using).quantize(Decimal("1.00"))
+        self.value = convert(
+            value=self.value,
+            of=self.code,
+            to=to,
+            on=on,
+            using=using,
+        ).quantize(Decimal("1.00"))
         self.code = to
 
     @classmethod

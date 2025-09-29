@@ -9,10 +9,10 @@ from pycountant.services import (
 
 
 @pytest.mark.parametrize(
-        "to_value, at_rate, expected",
-        [
-            (Decimal("100"), Decimal("20"), Decimal("120")),
-        ]
+    "to_value, at_rate, expected",
+    [
+        (Decimal("100"), Decimal("20"), Decimal("120")),
+    ],
 )
 def test_add_tax(to_value, at_rate, expected) -> None:
     # arrange
@@ -23,10 +23,10 @@ def test_add_tax(to_value, at_rate, expected) -> None:
 
 
 @pytest.mark.parametrize(
-        "from_value, at_rate, expected",
-        [
-            (Decimal("120"), Decimal("20"), Decimal("100")),
-        ]
+    "from_value, at_rate, expected",
+    [
+        (Decimal("120"), Decimal("20"), Decimal("100")),
+    ],
 )
 def test_remove_tax(from_value, at_rate, expected) -> None:
     # arrange
