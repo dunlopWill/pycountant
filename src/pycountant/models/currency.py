@@ -43,7 +43,7 @@ class Currency(BaseModel):
         code (Union[ISO4217, None], optional): ISO 4217 currency code. Defaults to None.
 
     Returns:
-        Currency: An instance of the Currency model.
+        None
 
     Examples:
         >>> from pycountant.models import Currency
@@ -51,8 +51,8 @@ class Currency(BaseModel):
         >>> print(amount)
         12,340.00 USD
         >>> from datetime import date
-        >>> converted_amount = amount.convert(to="EUR", on=date(2023, 1, 5))
-        >>> print(converted_amount)
+        >>> amount.convert(to="EUR", on=date(2023, 1, 5))
+        >>> print(amount)
         11,640.41 EUR
 
     """
@@ -72,7 +72,7 @@ class Currency(BaseModel):
         to: ISO4217,
         on: PastDate,
         using: FxProviderStr = "European Central Bank",
-    ) -> "Currency":
+    ) -> None:
         """
         Convert the value to its value in another currency
         using a specified FX provider and date.
@@ -89,8 +89,8 @@ class Currency(BaseModel):
         Returns:
             Currency: The converted Currency.
         """
-        converted = convert(value=self.value, of=self.code, to=to, on=on, using=using)
-        return self.__class__(value=converted, code=to)
+        self.value = convert(value=self.value, of=self.code, to=to, on=on, using=using).quantize(Decimal("1.00"))
+        self.code = to
 
     @classmethod
     def decountify(cls, value: str) -> Union[Decimal, str]:
