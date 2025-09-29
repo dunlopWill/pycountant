@@ -34,6 +34,17 @@ from ..extra_types import (
 
 @cache
 def get_rate_from_base(of_rate: Decimal, to_rate: Decimal) -> Decimal:
+    """
+    Gets the rate when it is known that the of and to rate are
+    relative to a single currency in the base rate.
+
+    Args:
+        of_rate (Decimal): The of rate.
+        to_rate (Decimal): The to rate.
+
+    Returns:
+        Decimal: The rate to use for conversion.
+    """
     base_rate = Decimal("1.0")
     return (base_rate / of_rate) / (base_rate / to_rate)
 
@@ -116,7 +127,11 @@ def get_rate_via_hmrc(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
         Decimal: The FX rate.
     """
     # https://api.trade-tariff.service.gov.uk/reference.html#get-exchange-rates-year-month
-    url = f"https://www.trade-tariff.service.gov.uk/uk/api/exchange_rates/{on.year}-{on.month}?filter[type]=monthly"
+    url = (
+        f"https://www.trade-tariff.service.gov.uk/"
+        f"uk/api/exchange_rates/{on.year}-{on.month}"
+        f"?filter[type]=monthly"
+    )
     response = httpx.get(url=url)
     content = response.json()
     of_rate = None if of != "GBP" else Decimal("1.0")
@@ -162,7 +177,8 @@ def get_conversion_strategy(
         NotImplementedError: Error raised if no strategy exists for that provider.
 
     Returns:
-        Callable[[ISO4217, ISO4217, date], Decimal]: A strategy to obtain the rate for conversion with.
+        Callable[[ISO4217, ISO4217, date], Decimal]: A strategy to obtain the
+                                                     rate for conversion with.
     """
     strategies: dict[
         FxProviderStr,
