@@ -7,4 +7,7 @@ from typing import (
 )
 
 # Literal foreign exchange providers.
-FxProviderStr = Literal["European Central Bank"]
+FxProviderStr = Literal[
+    "European Central Bank",
+    "HMRC",
+]
