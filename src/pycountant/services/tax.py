@@ -1,3 +1,6 @@
+"""
+Tax services.
+"""
 from decimal import Decimal
 from functools import cache
 
