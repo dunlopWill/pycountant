@@ -6,6 +6,9 @@ from decimal import (
 )
 
 import pytest
+from pydantic_extra_types.currency_code import (
+    ISO4217,
+)
 
 from pycountant.models import (
     Currency,
@@ -140,29 +143,29 @@ def test_currency_convert(value, code, to, expected) -> None:
     "currency, to, on, expected, accept_variance",
     [
         (
-            Currency(value=Decimal("12340.00"), code="USD"),
-            Currency(value=Decimal("11640.41"), code="EUR"),
+            Currency(value=Decimal("12340.00"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
             date(2023, 1, 5),
             True,
             Decimal("0.00"),
         ),
         (
-            Currency(value=Decimal("12340.05"), code="USD"),
-            Currency(value=Decimal("11640.41"), code="EUR"),
+            Currency(value=Decimal("12340.05"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
             date(2023, 1, 5),
             True,
             Decimal("0.05"),
         ),
         (
-            Currency(value=Decimal("12340.01"), code="USD"),
-            Currency(value=Decimal("11640.41"), code="EUR"),
+            Currency(value=Decimal("12340.01"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
             date(2023, 1, 5),
             False,
             Decimal("0.00"),
         ),
         (
-            Currency(value=Decimal("52340.00"), code="USD"),
-            Currency(value=Decimal("11640.41"), code="EUR"),
+            Currency(value=Decimal("52340.00"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
             date(2023, 1, 5),
             False,
             Decimal("0.00"),
@@ -191,13 +194,13 @@ def test_currency_is_equal_to(
     "currency, other, expected",
     [
         (
-            Currency(value=Decimal("100.00"), code="EUR"),
-            Currency(value=Decimal("86.95"), code="GBP"),
+            Currency(value=Decimal("100.00"), code=ISO4217("EUR")),
+            Currency(value=Decimal("86.95"), code=ISO4217("GBP")),
             True,
         ),
         (
-            Currency(value=Decimal("500.00"), code="EUR"),
-            Currency(value=Decimal("86.95"), code="GBP"),
+            Currency(value=Decimal("500.00"), code=ISO4217("EUR")),
+            Currency(value=Decimal("86.95"), code=ISO4217("GBP")),
             False,
         ),
     ],
