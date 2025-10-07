@@ -170,11 +170,11 @@ def test_currency_convert(value, code, to, expected) -> None:
     ],
 )
 def test_currency_is_equal_to(
-    currency: Currency,
-    to: Currency,
-    on: date,
-    expected: bool,
-    accept_variance: Decimal,
+    currency,
+    to,
+    on,
+    expected,
+    accept_variance,
 ) -> None:
     # arrange
     # act
@@ -203,9 +203,9 @@ def test_currency_is_equal_to(
     ],
 )
 def test_currency__eq__(
-    currency: Currency,
-    other: Currency,
-    expected: bool,
+    currency,
+    other,
+    expected,
 ) -> None:
     # arrange
     # act
