@@ -1,6 +1,7 @@
 from datetime import (
     date,
 )
+import datetime
 from decimal import (
     Decimal,
 )
@@ -134,3 +135,80 @@ def test_currency_convert(value, code, to, expected) -> None:
     # assert
     assert item.code == to
     assert item.value == expected
+
+
+@pytest.mark.parametrize(
+    "currency, to, on, expected, accept_variance",
+    [
+        (
+            Currency(value=Decimal("12340.00"), code="USD"),
+            Currency(value=Decimal("11640.41"), code="EUR"),
+            date(2023, 1, 5),
+            True,
+            Decimal("0.00"),
+        ),
+        (
+            Currency(value=Decimal("12340.05"), code="USD"),
+            Currency(value=Decimal("11640.41"), code="EUR"),
+            date(2023, 1, 5),
+            True,
+            Decimal("0.05"),
+        ),
+        (
+            Currency(value=Decimal("12340.01"), code="USD"),
+            Currency(value=Decimal("11640.41"), code="EUR"),
+            date(2023, 1, 5),
+            False,
+            Decimal("0.00"),
+        ),
+        (
+            Currency(value=Decimal("52340.00"), code="USD"),
+            Currency(value=Decimal("11640.41"), code="EUR"),
+            date(2023, 1, 5),
+            False,
+            Decimal("0.00"),
+        ),
+    ],
+)
+def test_currency_is_equal_to(
+    currency: Currency,
+    to: Currency,
+    on: date,
+    expected: bool,
+    accept_variance: Decimal,
+) -> None:
+    # arrange
+    # act
+    actual = currency.is_equal(
+        to=to,
+        on=on,
+        accept_variance=accept_variance,
+    )
+    # assert
+    assert actual is expected
+
+
+@pytest.mark.parametrize(
+    "currency, other, expected",
+    [
+        (
+            Currency(value=Decimal("100.00"), code="EUR"),
+            Currency(value=Decimal("86.95"), code="GBP"),
+            True,
+        ),
+        (
+            Currency(value=Decimal("500.00"), code="EUR"),
+            Currency(value=Decimal("86.95"), code="GBP"),
+            False,
+        ),
+    ],
+)
+def test_currency__eq__(
+    currency: Currency,
+    other: Currency,
+    expected: bool,
+) -> None:
+    # arrange
+    # act
+    # assert
+    assert (currency == other) is expected
