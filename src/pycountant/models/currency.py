@@ -2,6 +2,10 @@
 Model representing a currency amount (to a maximum of two decimal places) with its ISO 4217 code.
 """
 
+from datetime import (
+    date,
+    timedelta,
+)
 from decimal import (
     Decimal,
 )
@@ -160,6 +164,60 @@ class Currency(BaseModel):
             value = cls.decountify(value=value)
             data["value"] = value
         return data
+
+    def is_equal(
+        self,
+        *,
+        to: "Currency",
+        on: PastDate,
+        accept_variance: Decimal = Decimal("0.00"),
+    ) -> bool:
+        """
+        Checks if one currency is equal to another,
+        which is useful if you need to compare two currencies.
+
+        Args:
+            to: (Currency): The currency to compare with.
+            on: (PastDate): The date to compare the currencies on.
+            accept_variance: (Decimal): The acceptable variance (inclusive)
+                                        that the two currencies can differ by
+                                        (in self's currency code) to before
+                                        considered equal. Defaults to zero.
+
+        Returns:
+            bool: True if equal. False if not.
+        """
+        converted_value = convert(
+            value=self.value,
+            of=self.code,
+            to=to.code,
+            on=on,
+        )
+        difference = to.value - converted_value
+        if Decimal(abs(difference)).quantize(Decimal("0.00")) <= accept_variance:
+            return True
+        return False
+
+    def __eq__(self, other: object) -> bool:
+        """
+        Checks if one currency is equal to another on
+        yesterday's date.
+
+        Args:
+            other: (Currency): The currency to compare with.
+
+        Returns:
+            bool: True if equal. False if not.
+
+        !!! note
+
+            Currencies are compared on yesterday's date.
+        """
+        assert isinstance(other, self.__class__)
+        return self.is_equal(
+            to=other,
+            on=date.today() - timedelta(days=1),
+        )
 
 
 if __name__ == "__main__":

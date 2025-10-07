@@ -6,6 +6,9 @@ from decimal import (
 )
 
 import pytest
+from pydantic_extra_types.currency_code import (
+    ISO4217,
+)
 
 from pycountant.models import (
     Currency,
@@ -134,3 +137,80 @@ def test_currency_convert(value, code, to, expected) -> None:
     # assert
     assert item.code == to
     assert item.value == expected
+
+
+@pytest.mark.parametrize(
+    "currency, to, on, expected, accept_variance",
+    [
+        (
+            Currency(value=Decimal("12340.00"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
+            date(2023, 1, 5),
+            True,
+            Decimal("0.00"),
+        ),
+        (
+            Currency(value=Decimal("12340.05"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
+            date(2023, 1, 5),
+            True,
+            Decimal("0.05"),
+        ),
+        (
+            Currency(value=Decimal("12340.01"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
+            date(2023, 1, 5),
+            False,
+            Decimal("0.00"),
+        ),
+        (
+            Currency(value=Decimal("52340.00"), code=ISO4217("USD")),
+            Currency(value=Decimal("11640.41"), code=ISO4217("EUR")),
+            date(2023, 1, 5),
+            False,
+            Decimal("0.00"),
+        ),
+    ],
+)
+def test_currency_is_equal_to(
+    currency,
+    to,
+    on,
+    expected,
+    accept_variance,
+) -> None:
+    # arrange
+    # act
+    actual = currency.is_equal(
+        to=to,
+        on=on,
+        accept_variance=accept_variance,
+    )
+    # assert
+    assert actual is expected
+
+
+@pytest.mark.parametrize(
+    "currency, other, expected",
+    [
+        (
+            Currency(value=Decimal("100.00"), code=ISO4217("EUR")),
+            Currency(value=Decimal("86.95"), code=ISO4217("GBP")),
+            True,
+        ),
+        (
+            Currency(value=Decimal("500.00"), code=ISO4217("EUR")),
+            Currency(value=Decimal("86.95"), code=ISO4217("GBP")),
+            False,
+        ),
+    ],
+)
+def test_currency__eq__(
+    currency,
+    other,
+    expected,
+) -> None:
+    # arrange
+    # act
+    # assert
+    assert (currency == other) is expected
