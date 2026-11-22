@@ -24,9 +24,7 @@ from pycountant.excel import F, Raw, Sheet
 
 pytestmark = [
     pytest.mark.slow,
-    pytest.mark.skipif(
-        shutil.which("soffice") is None, reason="LibreOffice (soffice) is not installed"
-    ),
+    pytest.mark.skipif(shutil.which("soffice") is None, reason="LibreOffice (soffice) is not installed"),
 ]
 
 # LibreOffice reports Excel's "#NAME?" style for some failures and its own

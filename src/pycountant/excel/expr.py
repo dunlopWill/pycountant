@@ -3,7 +3,7 @@
 Every node is a ``str`` subclass whose string value is the finished, ``=``-prefixed
 formula, so an expression can be assigned straight to an openpyxl cell::
 
-    ws["B5"] = cell("B3") - cell("B4")  # cell gets "=B3-B4"
+    ws["B5"] = cell("B3") - cell("B4")   # cell gets "=B3-B4"
 
 Nesting uses :attr:`Expr.text` (the body, without the ``=``) rather than the string
 value.  That distinction is the one invariant holding the whole module together.
@@ -205,7 +205,7 @@ def _render_literal(value) -> tuple[str, int]:
     # bool before int: bool is an int subclass and would otherwise render as 1/0.
     if isinstance(value, bool):
         return ("TRUE" if value else "FALSE"), P_ATOM
-    if isinstance(value, (int, float, Decimal)):
+    if isinstance(value, int | float | Decimal):
         text = repr(value) if isinstance(value, float) else str(value)
         # A negative number carries a leading "-", so it needs unary-minus precedence.
         return text, (P_NEG if text.startswith("-") else P_ATOM)
@@ -254,12 +254,7 @@ class BinOp(Expr):
         return obj
 
     def shift(self, rows: int = 0, cols: int = 0) -> BinOp:
-        return BinOp(
-            self.op,
-            self.left.shift(rows, cols),
-            self.right.shift(rows, cols),
-            self._prec,
-        )
+        return BinOp(self.op, self.left.shift(rows, cols), self.right.shift(rows, cols), self._prec)
 
 
 class UnaryOp(Expr):

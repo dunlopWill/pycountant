@@ -13,13 +13,7 @@ from pathlib import Path
 import pytest
 
 from pycountant.excel import F, Func, cell, functions, rng
-from pycountant.excel.functions import (
-    _ARITY,
-    _KNOWN,
-    _XLFN,
-    _XLWS,
-    UnknownFunctionWarning,
-)
+from pycountant.excel.functions import _ARITY, _KNOWN, _XLFN, _XLWS, UnknownFunctionWarning
 
 R = rng("A:A")
 C = cell("A1")
@@ -83,10 +77,7 @@ def test_check_false_is_the_escape_hatch():
 def test_unknown_names_are_never_arity_checked():
     # The open set is the point: an add-in can have any signature at all.
     assert str(F.SOME_ADDIN_FUNCTION()) == "=SOME_ADDIN_FUNCTION()"
-    assert (
-        str(F.BLOOMBERG_BDP(C, "PX_LAST", 1, 2, 3))
-        == '=BLOOMBERG_BDP(A1,"PX_LAST",1,2,3)'
-    )
+    assert str(F.BLOOMBERG_BDP(C, "PX_LAST", 1, 2, 3)) == '=BLOOMBERG_BDP(A1,"PX_LAST",1,2,3)'
 
 
 def test_shifting_a_call_does_not_re_check_it():
@@ -199,11 +190,7 @@ def _stub_arity():
     stub_path = Path(functions.__file__).with_suffix(".pyi")
     assert stub_path.is_file(), f"the type stub is missing: {stub_path}"
     tree = ast.parse(stub_path.read_text(encoding="utf-8"))
-    cls = next(
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ClassDef) and node.name == "_Functions"
-    )
+    cls = next(node for node in ast.walk(tree) if isinstance(node, ast.ClassDef) and node.name == "_Functions")
 
     bounds = {}
     for node in cls.body:
@@ -233,9 +220,7 @@ def test_the_stub_declares_the_same_arity_as_the_table():
     # two layers disagree about whether the name is checked at all.
     assert set(stub) <= set(_ARITY), sorted(set(stub) - set(_ARITY))
 
-    disagree = {
-        name: (got, _ARITY[name]) for name, got in stub.items() if got != _ARITY[name]
-    }
+    disagree = {name: (got, _ARITY[name]) for name, got in stub.items() if got != _ARITY[name]}
     assert not disagree, f"stub vs _ARITY (stub, table): {disagree}"
 
     # Deliberately not asserted the other way: _ARITY covers far more names than the

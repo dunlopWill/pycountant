@@ -2,6 +2,7 @@
 Foreign exchange services.
 """
 
+from collections.abc import Callable
 from datetime import (
     date,
     datetime,
@@ -11,9 +12,6 @@ from decimal import (
 )
 from functools import (
     cache,
-)
-from typing import (
-    Callable,
 )
 from xml.etree import (
     ElementTree,
@@ -77,9 +75,7 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     of_rate = None if of != "EUR" else Decimal("1.0")
     to_rate = None if to != "EUR" else Decimal("1.0")
     date_cubes = [
-        cube
-        for cube in tree.findall("Cube")
-        if cube.attrib.get("time") == on.isoformat()
+        cube for cube in tree.findall("Cube") if cube.attrib.get("time") == on.isoformat()
     ]  # and cube.attrib.get("currency") == to]
     for date_cube in date_cubes:
         for cube in date_cube.findall("Cube"):
@@ -127,11 +123,7 @@ def get_rate_via_hmrc(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
         Decimal: The FX rate.
     """
     # https://api.trade-tariff.service.gov.uk/reference.html#get-exchange-rates-year-month
-    url = (
-        f"https://www.trade-tariff.service.gov.uk/"
-        f"uk/api/exchange_rates/{on.year}-{on.month}"
-        f"?filter[type]=monthly"
-    )
+    url = f"https://www.trade-tariff.service.gov.uk/uk/api/exchange_rates/{on.year}-{on.month}?filter[type]=monthly"
     response = httpx.get(url=url)
     content = response.json()
     of_rate = None if of != "GBP" else Decimal("1.0")

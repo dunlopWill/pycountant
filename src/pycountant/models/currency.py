@@ -11,7 +11,6 @@ from decimal import (
 )
 from typing import (
     Any,
-    Union,
 )
 
 from pydantic import (
@@ -29,8 +28,8 @@ from ..data import (
     CURRENCY_SYMBOL_TO_CODE_MAP,
 )
 from ..extra_types import (
-    Number,
     FxProviderStr,
+    Number,
 )
 from ..services import (
     convert,
@@ -65,7 +64,7 @@ class Currency(BaseModel):
         str_strip_whitespace=True,
     )
     value: Number
-    code: Union[ISO4217, None] = None
+    code: ISO4217 | None = None
 
     def __str__(self) -> str:
         return f"{self.value:,} {self.code}"
@@ -103,7 +102,7 @@ class Currency(BaseModel):
         self.code = to
 
     @classmethod
-    def decountify(cls, value: str) -> Union[Decimal, str]:
+    def decountify(cls, value: str) -> Decimal | str:
         """
         Negative numbers are sometimes represented by accountants
         between brackets.
@@ -149,9 +148,7 @@ class Currency(BaseModel):
         # Handle case where value is a string with currency symbol (e.g. "£1234")
         if value and isinstance(value, str):
             value = value.strip()
-            symbols = [
-                symbol for symbol in CURRENCY_SYMBOL_TO_CODE_MAP if symbol in value
-            ]
+            symbols = [symbol for symbol in CURRENCY_SYMBOL_TO_CODE_MAP if symbol in value]
             if symbols and len(symbols) == 1:
                 # Remove the symbol from the value
                 symbol = symbols[0]

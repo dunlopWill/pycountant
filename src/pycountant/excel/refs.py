@@ -96,25 +96,12 @@ class CellRef(Expr):
     home: str | None
 
     def __new__(
-        cls,
-        row: int,
-        col: int,
-        *,
-        abs_row: bool = False,
-        abs_col: bool = False,
-        sheet=None,
-        home=None,
+        cls, row: int, col: int, *, abs_row: bool = False, abs_col: bool = False, sheet=None, home=None
     ) -> CellRef:
         if not 1 <= row <= MAX_ROW:
             raise ValueError(f"row {row} out of range 1..{MAX_ROW}")
         name = sheet_name(sheet)
-        text = (
-            sheet_prefix(name)
-            + ("$" if abs_col else "")
-            + col_letter(col)
-            + ("$" if abs_row else "")
-            + str(row)
-        )
+        text = sheet_prefix(name) + ("$" if abs_col else "") + col_letter(col) + ("$" if abs_row else "") + str(row)
         obj = cls._make(text, P_ATOM)
         obj.row, obj.col = row, col
         obj.abs_row, obj.abs_col, obj.sheet = abs_row, abs_col, name
@@ -130,12 +117,7 @@ class CellRef(Expr):
 
     def rel_text(self) -> str:
         """This cell's text without the sheet prefix, keeping any ``$`` markers."""
-        return (
-            ("$" if self.abs_col else "")
-            + col_letter(self.col)
-            + ("$" if self.abs_row else "")
-            + str(self.row)
-        )
+        return ("$" if self.abs_col else "") + col_letter(self.col) + ("$" if self.abs_row else "") + str(self.row)
 
     def _replace(
         self,
@@ -192,9 +174,7 @@ class CellRef(Expr):
         if self.sheet is not None:
             return self
         if self.home is None:
-            raise ValueError(
-                f"{self!r} has no home sheet to qualify with; use .on(sheet) to name one explicitly"
-            )
+            raise ValueError(f"{self!r} has no home sheet to qualify with; use .on(sheet) to name one explicitly")
         return self._replace(sheet=self.home)
 
     def bare(self) -> CellRef:
@@ -253,10 +233,7 @@ class RangeRef(Expr):
 
     def shift(self, rows: int = 0, cols: int = 0) -> RangeRef:
         return RangeRef(
-            _shift_part(self.start, rows, cols),
-            _shift_part(self.end, rows, cols),
-            sheet=self.sheet,
-            home=self.home,
+            _shift_part(self.start, rows, cols), _shift_part(self.end, rows, cols), sheet=self.sheet, home=self.home
         )
 
     # Convenience aggregates.  Imported lazily to keep functions.py free to import
@@ -316,9 +293,9 @@ class Ref:
     imported) or a plain sheet name::
 
         data = Ref(ws)
-        data["B3"]  # 'Data'!B3
-        data["A:A"]  # 'Data'!A:A
-        data.cell(3, 2)  # 'Data'!B3
+        data["B3"]        # 'Data'!B3
+        data["A:A"]       # 'Data'!A:A
+        data.cell(3, 2)   # 'Data'!B3
     """
 
     __slots__ = ("sheet",)
@@ -330,11 +307,7 @@ class Ref:
         return f"Ref({self.sheet!r})"
 
     def __getitem__(self, key: str):
-        return (
-            cell(key, sheet=self.sheet)
-            if ":" not in key
-            else rng(key, sheet=self.sheet)
-        )
+        return cell(key, sheet=self.sheet) if ":" not in key else rng(key, sheet=self.sheet)
 
     def cell(self, row: int, col: int, **kw) -> CellRef:
         return cell(row, col, sheet=self.sheet, **kw)
@@ -343,20 +316,14 @@ class Ref:
         return rng(*args, sheet=self.sheet, **kw)
 
 
-def cell(
-    *positional,
-    sheet=None,
-    home=None,
-    abs_row: bool | None = None,
-    abs_col: bool | None = None,
-) -> CellRef:
+def cell(*args, sheet=None, home=None, abs_row: bool | None = None, abs_col: bool | None = None) -> CellRef:
     """Build a :class:`CellRef` from ``"B3"`` or from ``(row, col)``.
 
     ``cell("$B$3")`` picks up the ``$`` markers; the ``abs_row``/``abs_col``
     keywords override whatever the string said.
     """
-    args = list(positional)
-    if args and not isinstance(args[0], (str, int)):
+    args = list(args)
+    if args and not isinstance(args[0], str | int):
         sheet = args.pop(0)  # a worksheet passed positionally
     if len(args) == 1 and isinstance(args[0], str):
         row, col, parsed_row, parsed_col = _parse_a1(args[0])
@@ -375,9 +342,9 @@ def cell(
     )
 
 
-def rng(*positional, sheet=None, home=None) -> RangeRef:
+def rng(*args, sheet=None, home=None) -> RangeRef:
     """Build a :class:`RangeRef` from ``"B3:B10"`` or from two cell references."""
-    args = list(positional)
+    args = list(args)
     if args and not isinstance(args[0], str) and not isinstance(args[0], CellRef):
         sheet = args.pop(0)
     if len(args) == 1 and isinstance(args[0], str):

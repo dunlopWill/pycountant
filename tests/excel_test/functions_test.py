@@ -70,23 +70,13 @@ def test_unrenderable_literal_is_rejected():
 
 
 def test_future_functions_get_their_prefix():
-    assert (
-        str(F.XLOOKUP(cell("A1"), rng("B:B"), rng("C:C")))
-        == "=_xlfn.XLOOKUP(A1,B:B,C:C)"
-    )
-    assert (
-        str(F.TEXTJOIN(", ", True, rng("A1:A9"))) == '=_xlfn.TEXTJOIN(", ",TRUE,A1:A9)'
-    )
-    assert (
-        str(F.IFS(cell("A1").gt(0), "up", True, "down"))
-        == '=_xlfn.IFS(A1>0,"up",TRUE,"down")'
-    )
+    assert str(F.XLOOKUP(cell("A1"), rng("B:B"), rng("C:C"))) == "=_xlfn.XLOOKUP(A1,B:B,C:C)"
+    assert str(F.TEXTJOIN(", ", True, rng("A1:A9"))) == '=_xlfn.TEXTJOIN(", ",TRUE,A1:A9)'
+    assert str(F.IFS(cell("A1").gt(0), "up", True, "down")) == '=_xlfn.IFS(A1>0,"up",TRUE,"down")'
 
 
 def test_dynamic_array_functions_get_the_worksheet_prefix():
-    assert (
-        str(F.FILTER(rng("A:A"), rng("B:B").gt(0))) == "=_xlfn._xlws.FILTER(A:A,B:B>0)"
-    )
+    assert str(F.FILTER(rng("A:A"), rng("B:B").gt(0))) == "=_xlfn._xlws.FILTER(A:A,B:B>0)"
     assert str(F.SORT(rng("A1:C9"))) == "=_xlfn._xlws.SORT(A1:C9)"
     assert _XLWS == {"FILTER", "SORT"}
 
@@ -108,6 +98,4 @@ def test_pre_2010_functions_are_left_alone():
 
 def test_prefix_lookup_is_case_insensitive():
     assert stored_name("xlookup") == "_xlfn.XLOOKUP"
-    assert str(F.xlookup(cell("A1"), rng("B:B"), rng("C:C"))).startswith(
-        "=_xlfn.XLOOKUP"
-    )
+    assert str(F.xlookup(cell("A1"), rng("B:B"), rng("C:C"))).startswith("=_xlfn.XLOOKUP")

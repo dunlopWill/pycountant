@@ -267,9 +267,7 @@ def _check_name(name: str, n_args: int) -> None:
     else:
         wanted = f"{low} to {high}"
     plural = "" if wanted.endswith(" 1") else "s"
-    raise TypeError(
-        f"{upper} takes {wanted} argument{plural}, got {n_args}. Pass check=False to override."
-    )
+    raise TypeError(f"{upper} takes {wanted} argument{plural}, got {n_args}. Pass check=False to override.")
 
 
 class _Functions:

@@ -4,9 +4,9 @@
 own beyond the worksheet, and ``.ws`` is always there when you want plain openpyxl::
 
     s = Sheet(ws)
-    rev = s.put("B2", 1000)
+    rev  = s.put("B2", 1000)
     cost = s.put("B3", 600)
-    s.put("B4", (rev - cost) / rev)  # =(B2-B3)/B2
+    s.put("B4", (rev - cost) / rev)      # =(B2-B3)/B2
 
 References come back *unqualified*, because most formulas stay on one sheet.  When
 one crosses sheets, ``.qualified()`` supplies the sheet name for you.
@@ -79,9 +79,5 @@ class Sheet:
 
     def column(self, ref_or_letter) -> RangeRef:
         """The whole column a reference sits in: ``s.column(rev)`` -> ``B:B``."""
-        letter = (
-            col_letter(ref_or_letter.col)
-            if isinstance(ref_or_letter, CellRef)
-            else ref_or_letter
-        )
+        letter = col_letter(ref_or_letter.col) if isinstance(ref_or_letter, CellRef) else ref_or_letter
         return rng(f"{letter}:{letter}", home=self.title)
