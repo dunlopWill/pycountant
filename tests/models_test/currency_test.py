@@ -209,8 +209,20 @@ def test_currency__eq__(
     currency,
     other,
     expected,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # arrange
+    # __eq__ compares at yesterday's rate, so pin "today" to keep the expected
+    # values stable. 2025-10-20 is a Monday: yesterday is a Sunday, so this also
+    # falls back over the weekend to Friday 2025-10-17 (EUR→GBP 0.8695).
+    from pycountant.models import currency as currency_module
+
+    class FixedDate(date):
+        @classmethod
+        def today(cls) -> "FixedDate":
+            return cls(2025, 10, 20)
+
+    monkeypatch.setattr(currency_module, "date", FixedDate)
     # act
     # assert
     assert (currency == other) is expected

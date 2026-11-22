@@ -23,6 +23,8 @@ These are the changes that will go out in the next release.
 
 ## Changed
 
+- FX lookups no longer fail when no rate is published on the requested date
+  (e.g. a weekend): a warning is logged and up to two earlier days are tried.
 - Supports Python 3.14. The minimum pydantic is now 2.12, the first release whose
   core builds on 3.14.
 

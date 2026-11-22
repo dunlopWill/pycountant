@@ -2,10 +2,12 @@
 Foreign exchange services.
 """
 
+import logging
 from collections.abc import Callable
 from datetime import (
     date,
     datetime,
+    timedelta,
 )
 from decimal import (
     Decimal,
@@ -28,6 +30,11 @@ from pydantic_extra_types.currency_code import (
 from ..extra_types import (
     FxProviderStr,
 )
+
+logger = logging.getLogger(__name__)
+
+#: How many earlier days to try when no rate is published on the requested date.
+MAX_FALLBACK_DAYS = 2
 
 
 @cache
@@ -206,14 +213,16 @@ def get_rate(
 
     Raises:
         NotImplementedError: When the given FX provider is not supported.
+        ValueError: When no rate is found on the date or the fallback days before it.
 
     Returns:
         Decimal: The rate
 
-    !!! warning
+    !!! note
 
-        If the *on* PastDate does not fall on a weekday (Monday to Friday),
-        then it will not be possible to obtain a rate for conversion.
+        If no rate is published on the *on* date (e.g. a weekend), this is
+        logged and the previous day is tried instead, up to
+        `MAX_FALLBACK_DAYS` days earlier.
 
     !!! failure
 
@@ -224,7 +233,15 @@ def get_rate(
     strategy = get_conversion_strategy(using=using)
     if isinstance(on, datetime):
         on = on.date()  # Don't need time info
-    return strategy(of, to, on)
+    for days_back in range(MAX_FALLBACK_DAYS + 1):
+        day = on - timedelta(days=days_back)
+        try:
+            return strategy(of, to, day)
+        except ValueError as error:
+            if days_back == MAX_FALLBACK_DAYS:
+                raise
+            logger.warning("%s; trying %s instead", error, day - timedelta(days=1))
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 @cache
@@ -260,10 +277,11 @@ def convert(
         ... )
         11640.41128195453259126497500
 
-    !!! warning
+    !!! note
 
-        If the *on* PastDate does not fall on a weekday (Monday to Friday),
-        then it will not be possible to obtain a rate for conversion.
+        If no rate is published on the *on* date (e.g. a weekend), this is
+        logged and the previous day is tried instead, up to
+        `MAX_FALLBACK_DAYS` days earlier.
 
     !!! failure
 

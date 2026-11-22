@@ -26,9 +26,10 @@ Requires Python >=3.13; CI tests 3.13 and 3.14.
 
 **The fx tests hit the network.** `services_test/fx_test.py` and
 `models_test/currency_test.py` call the ECB and HMRC APIs for real. A failure there
-may be the remote service, not the code. `Currency.__eq__` compares at
-*yesterday's* ECB rate, so `test_currency__eq__` fails on any day after an ECB
-non-publishing day (weekends, TARGET holidays) — a known bug, not flakiness.
+may be the remote service, not the code. When no rate is published on the
+requested date, `get_rate()` logs a warning and falls back up to
+`MAX_FALLBACK_DAYS` (2) earlier days — enough to cover a weekend, not a longer
+TARGET holiday run.
 
 **Ruff formats and lints, both gating CI.** Formatting covers Python only. Ruff
 also formats Python inside Markdown fences; that is disabled in
