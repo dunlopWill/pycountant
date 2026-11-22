@@ -23,16 +23,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"  # Or whatever you're using
+          python-version: "3.13"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install mkdocs-gen-files mkdocs-literate-nav mkdocs-material mkdocs-section-index mkdocstrings[python]
+          pip install zensical "mkdocstrings[python]"
 
-      - name: Build MkDocs site
+      - name: Build Zensical site
         run: |
-          mkdocs build --clean --site-dir site
+          python scripts/gen_ref_pages.py
+          zensical build --clean
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
