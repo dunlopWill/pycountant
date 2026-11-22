@@ -1,6 +1,6 @@
 [project]
 name = "pycountant"
-version = "0.2.2"
+version = "0.3.0"
 description = "Python package for accountants."
 readme = "README.md"
 authors = [
