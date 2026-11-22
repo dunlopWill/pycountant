@@ -70,6 +70,22 @@ from pycountant.services import (
             "HMRC",
             Decimal("132.11"),  # 1.3211 * 100
         ),
+        (
+            Decimal("100.00"),
+            "GBP",
+            "GBP",
+            date(2025, 9, 2),
+            "European Central Bank",
+            Decimal("100.00"),
+        ),
+        (
+            Decimal("100.00"),
+            "USD",
+            "USD",
+            datetime(2024, 10, 31),
+            "HMRC",
+            Decimal("100.00"),
+        ),
     ],
 )
 def test_convert(
@@ -146,3 +162,21 @@ def test_get_rate_gives_up_after_two_prior_days(fake_strategy) -> None:
     with pytest.raises(ValueError, match="2025-09-04"):
         get_rate(of="GBP", to="USD", on=date(2025, 9, 6))
     assert calls == [date(2025, 9, 6), date(2025, 9, 5), date(2025, 9, 4)]
+
+
+@pytest.mark.parametrize("code", ["EUR", "GBP", "USD"])
+def test_ecb_rate_for_same_currency_is_one_without_a_request(
+    monkeypatch: pytest.MonkeyPatch,
+    code: ISO4217,
+) -> None:
+    from pycountant.services import fx
+
+    def no_network(*args, **kwargs):
+        raise AssertionError("same-currency lookup should not hit the network")
+
+    monkeypatch.setattr(fx.httpx, "get", no_network)
+    fx.get_rate_via_ecb.cache_clear()
+    try:
+        assert fx.get_rate_via_ecb(code, code, date(2025, 9, 2)) == Decimal("1")
+    finally:
+        fx.get_rate_via_ecb.cache_clear()

@@ -27,18 +27,34 @@ pip install pycountant
 
 ## Example
 
+### Currency amounts
+
+Parse amounts the way accountants write them, and convert them at historical
+European Central Bank or HMRC rates:
+
 ```python
 from datetime import date
 
 from pycountant.models import Currency
 
+Currency(value="(£1,250)")      # -1,250.00 GBP
+Currency(value="$12.34k")       # 12,340.00 USD
+
 pound = Currency(value="£1")
-
+pound.convert(to="USD", on=date(2025, 9, 5))   # converts in place, returns None
 print(pound)
-# 1.00 GBP
+# 1.35 USD
+```
 
-pound.convert(to="USD", on=date(2025, 9, 5))
-# Currency(value=Decimal('1.35'), code='USD')
+### Tax
+
+```python
+from decimal import Decimal
+
+from pycountant.services import add_tax, remove_tax
+
+add_tax(to_value=Decimal("100"), at_rate=Decimal("20"))       # Decimal('120')
+remove_tax(from_value=Decimal("120"), at_rate=Decimal("20"))  # Decimal('100')
 ```
 
 ### Excel formulas

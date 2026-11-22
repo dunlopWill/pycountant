@@ -3,14 +3,18 @@
 # ///
 """Finalize release notes, tag the current version, and create a GitHub release."""
 
+import re
 import subprocess
 import tomllib
+from datetime import date
 from pathlib import Path
 from typing import NamedTuple
 
 CHANGELOG_DIR = Path("CHANGELOG")
 UNRELEASED_PATH = CHANGELOG_DIR / "unreleased.md"
 RELEASE_BRANCH = "main"
+# Matches the " - YYYY-MM-DD" release date that Keep a Changelog puts after the version.
+RELEASE_DATE_SUFFIX = re.compile(r"\s+-\s+\d{4}-\d{2}-\d{2}$")
 UNRELEASED_TEMPLATE = "# Unreleased\n\nRecord user-visible changes here before the next release.\n"
 
 
@@ -148,10 +152,10 @@ def _is_unreleased_template(contents: str) -> bool:
     return lines == template_lines
 
 
-def _finalized_contents(contents: str, name: str, version: str) -> str:
-    """Turn the unreleased heading into a versioned release heading."""
+def _finalized_contents(contents: str, name: str, version: str, released: date) -> str:
+    """Turn the unreleased heading into a dated release heading (Keep a Changelog style)."""
     lines = contents.splitlines(keepends=True)
-    title = f"# {name} {version}\n"
+    title = f"# {name} {version} - {released.isoformat()}\n"
     if lines and lines[0].strip().lower() == "# unreleased":
         lines[0] = title
         return "".join(lines)
@@ -181,7 +185,7 @@ def _prepare_release_notes(name: str, version: str) -> Path:
     versioned_path.parent.mkdir(parents=True, exist_ok=True)
     UNRELEASED_PATH.rename(versioned_path)
     versioned_path.write_text(
-        _finalized_contents(contents, name, version),
+        _finalized_contents(contents, name, version, date.today()),
         encoding="utf-8",
     )
     UNRELEASED_PATH.write_text(UNRELEASED_TEMPLATE, encoding="utf-8")
@@ -195,7 +199,8 @@ def _release_notes(notes_path: Path, name: str, version: str) -> tuple[str, str]
     lines = notes_path.read_text(encoding="utf-8").splitlines(keepends=True)
     title = f"{name} {version}"
     if lines and lines[0].startswith("# "):
-        title = lines[0].lstrip("# ").strip()
+        # The heading carries the release date; GitHub shows its own, so drop it.
+        title = RELEASE_DATE_SUFFIX.sub("", lines[0].lstrip("# ").strip())
         lines = lines[1:]
         if lines and not lines[0].strip():
             lines = lines[1:]

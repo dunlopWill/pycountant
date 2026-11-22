@@ -70,6 +70,8 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     Returns:
         Decimal: The FX rate.
     """
+    if of == to:
+        return Decimal("1.0")
     content = str(
         httpx.get(
             "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml",
@@ -201,7 +203,7 @@ def get_rate(
     to: ISO4217,
     on: PastDate,
     using: FxProviderStr = "European Central Bank",
-):
+) -> Decimal:
     """
     Get the rate to convert one currency to another on a past date.
 

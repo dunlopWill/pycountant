@@ -6,6 +6,7 @@ from decimal import (
 )
 
 import pytest
+from pydantic import ValidationError
 from pydantic_extra_types.currency_code import (
     ISO4217,
 )
@@ -226,3 +227,9 @@ def test_currency__eq__(
     # act
     # assert
     assert (currency == other) is expected
+
+
+@pytest.mark.parametrize("value", ["abc", "£", "k", "(", "1.2.3"])
+def test_a_value_that_is_not_a_number_raises_validation_error(value) -> None:
+    with pytest.raises(ValidationError):
+        Currency(value=value)

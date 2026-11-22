@@ -179,7 +179,10 @@ adding, removing or renaming a module, and commit the result.
 
 | Page | Covers |
 |---|---|
-| `docs/index.md` | pitch, installation |
+| `docs/index.md` | pitch, installation, one example per feature |
+| `docs/currency/index.md` | `Currency`: parsing, converting, comparing |
+| `docs/currency/fx.md` | `convert`/`get_rate`, providers, weekend fallback, caching |
+| `docs/tax.md` | `add_tax` / `remove_tax` |
 | `docs/excel/index.md` | why the Excel formula builder exists, quickstart |
 | `docs/excel/usage.md` | writing values, references, operators, functions, `str`-subclass caveats |
 | `docs/excel/validation.md` | the three layers, and what none of them catch |

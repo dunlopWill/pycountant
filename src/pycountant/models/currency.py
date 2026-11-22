@@ -8,6 +8,7 @@ from datetime import (
 )
 from decimal import (
     Decimal,
+    InvalidOperation,
 )
 from typing import (
     Any,
@@ -41,12 +42,9 @@ class Currency(BaseModel):
     Model representing a currency amount (to a maximum of
     two decimal places) with its ISO 4217 code.
 
-    Args:
+    Attributes:
         value (Number): Decimal value of the amount, max two decimal places.
         code (Union[ISO4217, None], optional): ISO 4217 currency code. Defaults to None.
-
-    Returns:
-        None
 
     Examples:
         >>> from pycountant.models import Currency
@@ -121,9 +119,11 @@ class Currency(BaseModel):
         # Handle negative values in parentheses and remove commas
         value = value.replace("(", "-").replace(")", "").replace(",", "")
         # Handle abbreviations like k (e.g. 1.2k = 1200)
-        final_char = value[-1]
-        if final_char in ABBREVIATIONS:
-            return Decimal(value[:-1]) * ABBREVIATIONS[final_char]
+        if value and value[-1] in ABBREVIATIONS:
+            try:
+                return Decimal(value[:-1]) * ABBREVIATIONS[value[-1]]
+            except InvalidOperation as error:
+                raise ValueError(f"{value!r} is not a number") from error
         return value
 
     @model_validator(mode="before")
@@ -178,8 +178,9 @@ class Currency(BaseModel):
             on: (PastDate): The date to compare the currencies on.
             accept_variance: (Decimal): The acceptable variance (inclusive)
                                         that the two currencies can differ by
-                                        (in self's currency code) to before
-                                        considered equal. Defaults to zero.
+                                        before they are no longer considered
+                                        equal, in *to*'s currency (self is
+                                        converted into it). Defaults to zero.
 
         Returns:
             bool: True if equal. False if not.
