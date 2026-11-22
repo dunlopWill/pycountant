@@ -8,10 +8,10 @@ from datetime import (
 )
 from decimal import (
     Decimal,
+    InvalidOperation,
 )
 from typing import (
     Any,
-    Union,
 )
 
 from pydantic import (
@@ -29,8 +29,8 @@ from ..data import (
     CURRENCY_SYMBOL_TO_CODE_MAP,
 )
 from ..extra_types import (
-    Number,
     FxProviderStr,
+    Number,
 )
 from ..services import (
     convert,
@@ -42,12 +42,9 @@ class Currency(BaseModel):
     Model representing a currency amount (to a maximum of
     two decimal places) with its ISO 4217 code.
 
-    Args:
+    Attributes:
         value (Number): Decimal value of the amount, max two decimal places.
         code (Union[ISO4217, None], optional): ISO 4217 currency code. Defaults to None.
-
-    Returns:
-        None
 
     Examples:
         >>> from pycountant.models import Currency
@@ -65,7 +62,7 @@ class Currency(BaseModel):
         str_strip_whitespace=True,
     )
     value: Number
-    code: Union[ISO4217, None] = None
+    code: ISO4217 | None = None
 
     def __str__(self) -> str:
         return f"{self.value:,} {self.code}"
@@ -103,7 +100,7 @@ class Currency(BaseModel):
         self.code = to
 
     @classmethod
-    def decountify(cls, value: str) -> Union[Decimal, str]:
+    def decountify(cls, value: str) -> Decimal | str:
         """
         Negative numbers are sometimes represented by accountants
         between brackets.
@@ -122,9 +119,11 @@ class Currency(BaseModel):
         # Handle negative values in parentheses and remove commas
         value = value.replace("(", "-").replace(")", "").replace(",", "")
         # Handle abbreviations like k (e.g. 1.2k = 1200)
-        final_char = value[-1]
-        if final_char in ABBREVIATIONS:
-            return Decimal(value[:-1]) * ABBREVIATIONS[final_char]
+        if value and value[-1] in ABBREVIATIONS:
+            try:
+                return Decimal(value[:-1]) * ABBREVIATIONS[value[-1]]
+            except InvalidOperation as error:
+                raise ValueError(f"{value!r} is not a number") from error
         return value
 
     @model_validator(mode="before")
@@ -149,9 +148,7 @@ class Currency(BaseModel):
         # Handle case where value is a string with currency symbol (e.g. "£1234")
         if value and isinstance(value, str):
             value = value.strip()
-            symbols = [
-                symbol for symbol in CURRENCY_SYMBOL_TO_CODE_MAP if symbol in value
-            ]
+            symbols = [symbol for symbol in CURRENCY_SYMBOL_TO_CODE_MAP if symbol in value]
             if symbols and len(symbols) == 1:
                 # Remove the symbol from the value
                 symbol = symbols[0]
@@ -181,8 +178,9 @@ class Currency(BaseModel):
             on: (PastDate): The date to compare the currencies on.
             accept_variance: (Decimal): The acceptable variance (inclusive)
                                         that the two currencies can differ by
-                                        (in self's currency code) to before
-                                        considered equal. Defaults to zero.
+                                        before they are no longer considered
+                                        equal, in *to*'s currency (self is
+                                        converted into it). Defaults to zero.
 
         Returns:
             bool: True if equal. False if not.

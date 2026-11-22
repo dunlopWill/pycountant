@@ -2,18 +2,18 @@
 Foreign exchange services.
 """
 
+import logging
+from collections.abc import Callable
 from datetime import (
     date,
     datetime,
+    timedelta,
 )
 from decimal import (
     Decimal,
 )
 from functools import (
     cache,
-)
-from typing import (
-    Callable,
 )
 from xml.etree import (
     ElementTree,
@@ -30,6 +30,11 @@ from pydantic_extra_types.currency_code import (
 from ..extra_types import (
     FxProviderStr,
 )
+
+logger = logging.getLogger(__name__)
+
+#: How many earlier days to try when no rate is published on the requested date.
+MAX_FALLBACK_DAYS = 2
 
 
 @cache
@@ -65,6 +70,8 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     Returns:
         Decimal: The FX rate.
     """
+    if of == to:
+        return Decimal("1.0")
     content = str(
         httpx.get(
             "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml",
@@ -77,9 +84,7 @@ def get_rate_via_ecb(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
     of_rate = None if of != "EUR" else Decimal("1.0")
     to_rate = None if to != "EUR" else Decimal("1.0")
     date_cubes = [
-        cube
-        for cube in tree.findall("Cube")
-        if cube.attrib.get("time") == on.isoformat()
+        cube for cube in tree.findall("Cube") if cube.attrib.get("time") == on.isoformat()
     ]  # and cube.attrib.get("currency") == to]
     for date_cube in date_cubes:
         for cube in date_cube.findall("Cube"):
@@ -127,11 +132,7 @@ def get_rate_via_hmrc(of: ISO4217, to: ISO4217, on: PastDate) -> Decimal:
         Decimal: The FX rate.
     """
     # https://api.trade-tariff.service.gov.uk/reference.html#get-exchange-rates-year-month
-    url = (
-        f"https://www.trade-tariff.service.gov.uk/"
-        f"uk/api/exchange_rates/{on.year}-{on.month}"
-        f"?filter[type]=monthly"
-    )
+    url = f"https://www.trade-tariff.service.gov.uk/uk/api/exchange_rates/{on.year}-{on.month}?filter[type]=monthly"
     response = httpx.get(url=url)
     content = response.json()
     of_rate = None if of != "GBP" else Decimal("1.0")
@@ -202,7 +203,7 @@ def get_rate(
     to: ISO4217,
     on: PastDate,
     using: FxProviderStr = "European Central Bank",
-):
+) -> Decimal:
     """
     Get the rate to convert one currency to another on a past date.
 
@@ -214,14 +215,16 @@ def get_rate(
 
     Raises:
         NotImplementedError: When the given FX provider is not supported.
+        ValueError: When no rate is found on the date or the fallback days before it.
 
     Returns:
         Decimal: The rate
 
-    !!! warning
+    !!! note
 
-        If the *on* PastDate does not fall on a weekday (Monday to Friday),
-        then it will not be possible to obtain a rate for conversion.
+        If no rate is published on the *on* date (e.g. a weekend), this is
+        logged and the previous day is tried instead, up to
+        `MAX_FALLBACK_DAYS` days earlier.
 
     !!! failure
 
@@ -232,7 +235,15 @@ def get_rate(
     strategy = get_conversion_strategy(using=using)
     if isinstance(on, datetime):
         on = on.date()  # Don't need time info
-    return strategy(of, to, on)
+    for days_back in range(MAX_FALLBACK_DAYS + 1):
+        day = on - timedelta(days=days_back)
+        try:
+            return strategy(of, to, day)
+        except ValueError as error:
+            if days_back == MAX_FALLBACK_DAYS:
+                raise
+            logger.warning("%s; trying %s instead", error, day - timedelta(days=1))
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 @cache
@@ -268,10 +279,11 @@ def convert(
         ... )
         11640.41128195453259126497500
 
-    !!! warning
+    !!! note
 
-        If the *on* PastDate does not fall on a weekday (Monday to Friday),
-        then it will not be possible to obtain a rate for conversion.
+        If no rate is published on the *on* date (e.g. a weekend), this is
+        logged and the previous day is tried instead, up to
+        `MAX_FALLBACK_DAYS` days earlier.
 
     !!! failure
 

@@ -7,7 +7,6 @@ from pydantic_extra_types.currency_code import (
     ISO4217,
 )
 
-
 CURRENCY_SYMBOL_TO_CODE_MAP: dict[str, ISO4217] = {
     "$": ISO4217("USD"),
     "£": ISO4217("GBP"),
