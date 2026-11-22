@@ -17,11 +17,13 @@ dev = [
     "flake8>=7.3.0",
     "mkdocstrings[python]>=0.30.0",
     "mypy>=1.17.1",
+    "openpyxl>=3.1",
     "pre-commit>=4.3.0",
     "pylint>=3.3.8",
     "pytest>=8.4.1",
     "ruff>=0.12.12",
     "tool>=0.8.0",
+    "types-openpyxl>=3.1.5.20261122",
     "zensical>=0.0.52",
 ]
 
@@ -104,9 +106,17 @@ docstring-code-format = true
 # enabled.
 docstring-code-line-length = "dynamic"
 
+[tool.ruff.lint.per-file-ignores]
+# pytest.importorskip has to run before the imports it guards.
+"tests/excel_test/openpyxl_roundtrip_test.py" = ["E402"]
+"tests/excel_test/recalc_test.py" = ["E402"]
+
 [tool.ruff.lint.pydocstyle]
 # Use Google-style docstrings.
 convention = "google"
 
 [tool.pytest.ini_options]
 pythonpath = "src"
+markers = [
+    "slow: evaluates a workbook in headless LibreOffice; deselect with -m 'not slow'",
+]
